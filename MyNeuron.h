@@ -107,8 +107,7 @@ public:
 	input：一个一维数组。长度需要与layer第一层（h[0]）的长度相同。倘若不同，程序将会退出。
 	therehold: 阈值。超过它，则返回真（1.0），否则返回假（0.0）。为了保持可拓展性，返回暂时使用double类型。
 	@ return
-	返回：输出（最后一层layer，即h.back()）的引用（这将导致layer最后一层第一个数值(h[h.size()-1][0]）被改变。
-	因而不推荐这个函数。
+	返回：输出（最后一层layer，即h.back()）的第一个元素。通常对于只有一个输出的神经网络来讲，这样是可以用的。
 	*/
 	double predict(my_vector& input, double therehold);//todo
 
