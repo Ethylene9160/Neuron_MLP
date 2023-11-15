@@ -289,6 +289,7 @@ my_vector& MyNeuron::forward(my_vector& data) {
 
 
 /*
+
 void MyNeuron::train(std::vector<my_vector>& data, my_vector& label)
 {
     //假设最终的输出只有一个维度。即h[size-1].size() = 1.
@@ -483,7 +484,9 @@ my_vector& MyNeuron::predict(my_vector& input)
     // 这里我们假设网络输出是二分类的概率，使用0.5作为阈值
     // 如果网络设计为多分类，可能需要选择最大值所在的索引
     // 因为我们预期输出是单个值，我们将使用output[0]作为预测概率
-    double threshold = sigmoid(0.5);
+    //double threshold = sigmoid(0.5);
+
+    double threshold = 0.5;
     //printf("output0 is:%f\n", output[0]);
     output[0] = (output[0] >= threshold) ? 1.0 : 0.0;
 
@@ -505,7 +508,7 @@ my_vector& MyNeuron::predict(my_vector& input)
 
 double MyNeuron::predict(my_vector& input, double threshold)
 {
-    threshold = sigmoid(threshold);
+    //threshold = sigmoid(threshold);
     return (forward(input)[0] > threshold ? 1.0 : 0.0);
 }
 
