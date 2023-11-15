@@ -1,5 +1,7 @@
 #include "MyNeuron.h"
 template<typename T>
+
+//deprecated
 void printArray(int dimension, std::vector<T>& arr) {
     return;
     /*
@@ -117,13 +119,13 @@ void MyNeuron::backward(std::vector<my_vector>& data, my_vector& labels)
 
 }
 
-MyNeuron::MyNeuron() :MyNeuron(0, 0.01)
+MyNeuron::MyNeuron() :MyNeuron(100, 0.01)
 {
 }
 
 
 MyNeuron::MyNeuron(int eopches, double lr) :
-    MyNeuron(eopches, lr, { {0,0},{0,0} })
+    MyNeuron(eopches, lr, { {0,0},{0} })
 {
 }
 
@@ -348,7 +350,7 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label)
 
 void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
     assert(data.size() == label.size());  // 确保数据和标签的数量匹配
-
+    //假定输出维度为1*1.多维输出能力不够，不会。
     for (int epoch = 0; epoch < epoches; ++epoch) {
         for (size_t dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
             assert(dataIndex < label.size());  // 确保标签索引在范围内
@@ -484,6 +486,8 @@ my_vector& MyNeuron::predict(my_vector& input)
     double threshold = sigmoid(0.5);
     //printf("output0 is:%f\n", output[0]);
     output[0] = (output[0] >= threshold) ? 1.0 : 0.0;
+
+    // 返回分类决策，是h.back()的引用。
     return output;
     for (auto& wi : w) {
         for (auto& wj : wi) {
@@ -495,15 +499,14 @@ my_vector& MyNeuron::predict(my_vector& input)
         printf("\n");
     }
 
-    // 返回分类决策
-    return output; // 注意：这里直接返回引用是危险的，如果output是局部变量的话
+    return output; 
 
 }
 
-bool MyNeuron::predict(my_vector& input, double threshold)
+double MyNeuron::predict(my_vector& input, double threshold)
 {
     threshold = sigmoid(threshold);
-    return forward(input)[0] > threshold;
+    return (forward(input)[0] > threshold ? 1.0 : 0.0);
 }
 
 int MyNeuron::LR_VOKE = 500;
