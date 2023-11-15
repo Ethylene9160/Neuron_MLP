@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\MyNeuron.h">
+    <ClInclude Include="MyNeuron.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Main.cpp">
+    <ClCompile Include="Main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\MyNeuron.cpp">
+    <ClCompile Include="MyNeuron.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
