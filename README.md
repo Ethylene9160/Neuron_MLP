@@ -336,7 +336,7 @@ $$
 
 训练结果如下：
 
-![img](README.assets/1IYZ3R}SV$EBG%4P`}20WCW.png)
+![img](README.assets/testNeuronCir.png)
 
 其中，红色部分表示预测值为1的坐标，蓝色值表示预测值为0的坐标。白线范围表示两个圆在(0,0)到(0.5,0.5)的边界。
 
