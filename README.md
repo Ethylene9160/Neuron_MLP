@@ -342,7 +342,7 @@ $$
 
 
 
-## 在python中使用
+## Use in Python
 
 PY_MPL是经过封装的用于提供python接口的header file。如需使用，请保证您的python环境下安装了cppyy库：
 
@@ -374,3 +374,26 @@ cmake --build . --config Release
 
 在同目录的Release文件夹下的build目录内，找到bin或者lib目录（或者其他），在其中可以找到对应的`.dll`动态链接库
 
+
+
+# Dependences
+
+* c++万能头文件<bits/stdc++.h>: 如果没有这个头文件，请将工程文件中的
+
+  ```c++
+  #include <bits/stdc++.h>
+  ```
+
+  替换为：
+
+  ```c++
+  #include <vector>
+  #include <iostream>
+  #include <cassert>
+  #include <stdexcept> 
+  #include <random>
+  #include <cstdlib> 
+  #include <ctime>
+  ```
+
+  
