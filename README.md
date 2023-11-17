@@ -71,7 +71,7 @@ typedef std::vector<single_power> my_power;
 
 * 目前输出层默认（也只能emmm，笨人无才，不会多层）为1*1的一维矩阵。如图2-1，则这个函数的输出结果是output layer。详情查看：==todo==
 
-`void train(std::vector<my_vector>& data, my_vector& label);` 训练神经网络。
+<font size=4>`void train(std::vector<my_vector>& data, my_vector& label);`</font> 训练神经网络。
 
 参数：
 
@@ -194,13 +194,13 @@ $$
   $$
   <p align='center'><font size=3>式3-2</font></p>
   
-  由于使用激活函数o=g(z)，于是$o_k=g(z_k)$, 那么：
+  由于使用激活函数g(z)，于是$o_k=g(z_k)$, 那么：
   $$
   \frac{\part o_k}{\part z_k}=g'(z_k)\\
   %\rightarrow
   %\frac{\part o}{\part h}=g'(h)\\
   $$
-  这里的$z_k$即为先前的$h$的第k个元素
+  这里的$z_k$即为先前的$h$的第k个元素(注意g'()内的参数是z~k~不是o~k~)。
   
   根据式3-1
   
@@ -292,13 +292,13 @@ $$
           }
           //...
           for (int layerIndex = 0; layerIndex < w.size(); ++layerIndex) {
-          for (int neuronIndex = 0; neuronIndex < w[layerIndex].size(); ++neuronIndex) {
-              for (int nextNeuronIndex = 0; nextNeuronIndex < w[layerIndex][neuronIndex].size(); ++nextNeuronIndex) {
-                  w[layerIndex][neuronIndex][nextNeuronIndex] += learning * o[layerIndex][neuronIndex] * layerGradients[layerIndex][nextNeuronIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
+              for (int neuronIndex = 0; neuronIndex < w[layerIndex].size(); ++neuronIndex) {
+                  for (int nextNeuronIndex = 0; nextNeuronIndex < w[layerIndex][neuronIndex].size(); ++nextNeuronIndex) {
+                      w[layerIndex][neuronIndex][nextNeuronIndex] += learning * o[layerIndex][neuronIndex] * layerGradients[layerIndex][nextNeuronIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
+                  }
               }
-          }
-          for (int biasIndex = 0; biasIndex < b[layerIndex].size(); ++biasIndex) {
-              b[layerIndex][biasIndex] += learning * layerGradients[layerIndex][biasIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
+              for (int biasIndex = 0; biasIndex < b[layerIndex].size(); ++biasIndex) {
+                  b[layerIndex][biasIndex] += learning * layerGradients[layerIndex][biasIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
           }
       }
   }
@@ -310,7 +310,8 @@ $$
 
   ```c++
   void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
-      //assert(data.size() == label.size());  // 确保数据和标签的数量匹配
+      assert(data.size() == label.size());  // 确保数据和标签的数量匹配
+      assert(data[0].size == h[0].size());
       //假定输出维度为1*1.多维输出能力不够，不会。
       for (int epoch = 0; epoch < epoches; ++epoch) {
           for (int dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
@@ -319,6 +320,57 @@ $$
       }
   }
   ```
-
   
+
+至此，该神经网络能够被实现。
+
+## Train Set for Examing
+
+测试信息被包含在了`Main.cpp`的主函数内。基本方法是，生成一组训练集，然后对该网络进行训练；生成测试集，对测试集的预测结果和标签进行比较，计算准确率。
+
+例如，选定数据集和测试集为平面(0,0)到(0.5,0.5)之间的点集合，假定满足：
+$$
+pred(x,y)=x^2+y^2<0.09~or~(x-0.5)^2+(y-0.5)^2<0.09)?1:0
+$$
+即：在平面(0,0)\~(1,1)范围内，处在$x^2+y^2<0.3^2$或者$(x-0.5)^2+(y-0.5)^2<0.3^2$（即以(0,0)和（0.5,0.5）为圆心，半径为0.3的圆）内的点，设置label为1，否则为0，选取适当参数对模型进行训练。
+
+训练结果如下：
+
+![img](README.assets/testNeuronCir.png)
+
+其中，红色部分表示预测值为1的坐标，蓝色值表示预测值为0的坐标。白线范围表示两个圆在(0,0)到(0.5,0.5)的边界。
+
+
+
+## 在python中使用
+
+PY_MPL是经过封装的用于提供python接口的header file。如需使用，请保证您的python环境下安装了cppyy库：
+
+```bash
+pip install cppyy
+```
+
+也可以尝试使用`pybind11`等库。本文将介绍通过cppyy完成python与c++动态链接库之间的交联。
+
+* 检测是否成功安装
+
+  在python程序源代码中输入
+
+  ```python
+  import cppyy
+  import ctypes
+  ```
+
+  如果没有报错，那么可以进行下一步了。
+
+确保准备工作齐全后，使用CMake指令（==todo==: 编写CMakeList.txt），将该库编译为动态链接文件
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+```
+
+在同目录的Release文件夹下的build目录内，找到bin或者lib目录（或者其他），在其中可以找到对应的`.dll`动态链接库
 
