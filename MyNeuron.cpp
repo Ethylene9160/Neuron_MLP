@@ -18,10 +18,77 @@ void printArray(int dimension, std::vector<T>& arr) {
     */
 }
 
-inline double getMSELoss(double& x1, double& x2)
+inline double getMSELoss(double x1, double x2)
 {
     double d = x1 - x2;
     return d * d;
+}
+
+void MyNeuron::init(int epoches, double lr, std::vector<my_vector> h)
+{
+    this->LR_VOKE = 500;
+    this->epoches = epoches;
+    this->learning = lr;
+    //this->layers = layers;
+    this->h = h;
+    this->o = h;
+    this->b = std::vector<my_vector>(h.size());
+    printf("size of h is: \n");
+    for (int i = 0; i < h.size(); ++i) {
+        printf("size%d is %d\n", i, h[i].size());
+    }
+    printf("\n");
+    printf("size of b is: \n");
+    for (int i = 0; i < h.size(); ++i) {
+        b[i] = my_vector(h[i].size(), 0);
+        printf("size%d is %d\n", i, b[i].size());
+    }
+
+
+    this->w = my_power(this->h.size() - 1);
+    for (int i = 0; i < this->w.size(); ++i) {
+        this->w[i] = single_power(h[i].size(), my_vector(h[i + 1].size()));
+    }
+    // 随机赋予w值
+    // 初始化随机数生成器
+    std::default_random_engine generator(static_cast<unsigned>(time(0)));
+    std::uniform_real_distribution<double> distribution(-1.0, 1.0); // 例如在-1.0到1.0之间生成随机数
+
+    // 初始化权重矩阵
+    this->w = my_power(this->h.size() - 1);
+    for (int i = 0; i < this->w.size(); ++i) {
+        this->w[i] = single_power(h[i].size(), my_vector(h[i + 1].size()));
+        for (int j = 0; j < w[i].size(); ++j) {
+            for (int k = 0; k < w[i][j].size(); ++k) {
+                w[i][j][k] = distribution(generator); // 使用随机数填充
+            }
+        }
+    }
+
+
+    printf("\nsize of w is: \n");
+    for (int i = 0; i < w.size(); ++i) {
+        printf("size of %dth of w is %d * %d\n", i, w[i].size(), w[i][0].size());
+    }
+
+    printf("================\n init w will be: \n");
+    for (int i = 0; i < w.size(); ++i) {
+        printf("w%d will be:\n", i);
+        for (int j = 0; j < w[i].size(); ++j) {
+            for (int k = 0; k < w[i][j].size(); ++k) {
+                printf("%f\t", w[i][j][k]);
+            }
+            printf("\n");
+        }
+    }
+    printf("================\n init b will be: \n");
+    for (int i = 0; i < b.size(); ++i) {
+        for (int j = 0; j < b[i].size(); ++j) {
+            printf("b%d%d is: %f\t", i, j, b[i][j]);
+        }
+        printf("\n");
+    }
+
 }
 
 bool MyNeuron::isSameDouble(double d1, double d2)
@@ -32,21 +99,21 @@ bool MyNeuron::isSameDouble(double d1, double d2)
 void MyNeuron::calculateOutput(my_vector& x, my_vector& y, single_power& power, my_vector& bias, my_vector& o_sigmoid)
 {
     // 确保权重矩阵的列数与输出向量的尺寸相匹配
-    for (size_t i = 0; i < power.size(); ++i) {
-        assert(power[i].size() == y.size());
-    }
+    //for (int i = 0; i < power.size(); ++i) {
+        //assert(power[i].size() == y.size());
+    //}
 
     // 确保偏置向量的尺寸与输出向量的尺寸相匹配
-    assert(bias.size() == y.size());
+    //assert(bias.size() == y.size());
 
     // 计算输出向量的每个元素
     for (int j = 0; j < y.size(); ++j) {
         y[j] = 0.0;
         for (int k = 0; k < x.size(); k++) {
             // 确保权重矩阵的行数与输入向量的尺寸相匹配
-            assert(k < power.size());
+            //assert(k < power.size());
             // 确保当前的k行有一个对应的j列
-            assert(j < power[k].size());
+            //assert(j < power[k].size());
 
             y[j] += x[k] * power[k][j];
         }
@@ -131,68 +198,36 @@ MyNeuron::MyNeuron(int eopches, double lr) :
 
 MyNeuron::MyNeuron(int eopches, double lr, std::vector<my_vector> h)
 {
-    this->epoches = eopches;
-    this->learning = lr;
-    //this->layers = layers;
-    this->h = h;
-    this->o = h;
-    this->b = std::vector<my_vector>(h.size());
-    printf("size of h is: \n");
-    for (int i = 0; i < h.size(); ++i) {
-        printf("size%d is %d\n", i, h[i].size());
-    }
-    printf("\n");
-    printf("size of b is: \n");
-    for (int i = 0; i < h.size(); ++i) {
-        b[i] = my_vector(h[i].size(), 0);
-        printf("size%d is %d\n", i, b[i].size());
-    }
+    this->init(eopches, lr, h);
+}
 
+MyNeuron::MyNeuron(int epoches, double lr, int inputSize, std::vector<int> hiddenLayerSizes)
+{
+    int size = hiddenLayerSizes.size();
+    std::vector<my_vector> v(size+1);
+    v[0] = my_vector(inputSize);
 
-    this->w = my_power(this->h.size() - 1);
-    for (int i = 0; i < this->w.size(); ++i) {
-        this->w[i] = single_power(h[i].size(), my_vector(h[i + 1].size()));
+    for (int i = 0; i < size; ++i) {
+        v[i+1] = my_vector(hiddenLayerSizes[i]);
     }
-    // 随机赋予w值
-    // 初始化随机数生成器
-    std::default_random_engine generator(static_cast<unsigned>(time(0)));
-    std::uniform_real_distribution<double> distribution(-1.0, 1.0); // 例如在-1.0到1.0之间生成随机数
+    v.push_back({ {0.0} });
+    init(epoches, lr, v);
+    
+}
 
-    // 初始化权重矩阵
-    this->w = my_power(this->h.size() - 1);
-    for (int i = 0; i < this->w.size(); ++i) {
-        this->w[i] = single_power(h[i].size(), my_vector(h[i + 1].size()));
-        for (int j = 0; j < w[i].size(); ++j) {
-            for (int k = 0; k < w[i][j].size(); ++k) {
-                w[i][j][k] = distribution(generator); // 使用随机数填充
-            }
-        }
+MyNeuron::MyNeuron(int epoches, double lr, int inputSize, int hiddenLayerSizes[], int hidenSize)
+{
+    //printf("test start\n");
+    std::vector<my_vector> v(hidenSize + 1);
+    v[0] = my_vector(inputSize);
+    //printf("input over\n");
+    for (int i = 0; i < hidenSize; ++i) {
+        v[i + 1] = my_vector(hiddenLayerSizes[i]);
     }
-
-
-    printf("\nsize of w is: \n");
-    for (int i = 0; i < w.size(); ++i) {
-        printf("size of %dth of w is %d * %d\n", i, w[i].size(), w[i][0].size());
-    }
-
-    printf("================\n init w will be: \n");
-    for (int i = 0; i < w.size(); ++i) {
-        printf("w%d will be:\n", i);
-        for (int j = 0; j < w[i].size(); ++j) {
-            for (int k = 0; k < w[i][j].size(); ++k) {
-                printf("%f\t", w[i][j][k]);
-            }
-            printf("\n");
-        }
-    }
-    printf("================\n init b will be: \n");
-    for (int i = 0; i < b.size(); ++i) {
-        for (int j = 0; j < b[i].size(); ++j) {
-            printf("b%d%d is: %f\t", i, j, b[i][j]);
-        }
-        printf("\n");
-    }
-
+    
+    v.push_back({ {0.0} });
+    //printf("start init!!\n");
+    init(epoches, lr, v);
 }
 
 double MyNeuron::sigmoid(double x)
@@ -245,9 +280,9 @@ my_vector&MyNeuron::forward(my_vector& data)
 */
 my_vector& MyNeuron::forward(my_vector& data) {
     // 确保输入数据的尺寸与网络输入层的尺寸相匹配
-    if (data.size() != h[0].size()) {
-        throw std::invalid_argument("Size of input data does not match the size of the network's input layer.");
-    }
+    //if (data.size() != h[0].size()) {
+        //throw std::invalid_argument("Size of input data does not match the size of the network's input layer.");
+    //}
 
     // 用输入数据初始化第一层的输出
     h[0].assign(data.begin(), data.end());
@@ -256,21 +291,21 @@ my_vector& MyNeuron::forward(my_vector& data) {
     int i_max = this->h.size() - 1;
     for (int i = 0; i < i_max; i++) {
         // 在进行矩阵乘法之前，确保索引有效
-        if (i >= w.size() || i + 1 >= h.size() || i + 1 >= b.size()) {
-            throw std::out_of_range("Index out of range during forward pass.");
-        }
+        //if (i >= w.size() || i + 1 >= h.size() || i + 1 >= b.size()) {
+            //throw std::out_of_range("Index out of range during forward pass.");
+        //}
 
         // 检查权重矩阵的维度是否正确
-        if (h[i].size() != w[i].size()) {
-            throw std::invalid_argument("Mismatch between layer output size and weight matrix size.");
-        }
+        //if (h[i].size() != w[i].size()) {
+            //throw std::invalid_argument("Mismatch between layer output size and weight matrix size.");
+        //}
 
         // 检查权重矩阵的每个向量的尺寸是否与下一层的尺寸匹配
-        for (size_t k = 0; k < w[i].size(); ++k) {
-            if (w[i][k].size() != h[i + 1].size()) {
-                throw std::invalid_argument("Mismatch between weight matrix size and next layer size.");
-            }
-        }
+        //for (int k = 0; k < w[i].size(); ++k) {
+            //if (w[i][k].size() != h[i + 1].size()) {
+                //throw std::invalid_argument("Mismatch between weight matrix size and next layer size.");
+            //}
+        //}
 
         // 计算下一层的输出
         //this->calculateOutput(h[i], h[i + 1], w[i], b[i + 1]);
@@ -350,23 +385,23 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label)
 */
 
 void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
-    assert(data.size() == label.size());  // 确保数据和标签的数量匹配
+    //assert(data.size() == label.size());  // 确保数据和标签的数量匹配
     //假定输出维度为1*1.多维输出能力不够，不会。
     for (int epoch = 0; epoch < epoches; ++epoch) {
-        for (size_t dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
-            assert(dataIndex < label.size());  // 确保标签索引在范围内
+        for (int dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
+            //assert(dataIndex < label.size());  // 确保标签索引在范围内
 
             //printf("train-forward\n");
             // 前向传播
             my_vector output = forward(data[dataIndex]);
             my_vector& output_h = this->h[h.size() - 1];
 
-            assert(!output.empty());  // 确保输出不为空
+            //assert(!output.empty());  // 确保输出不为空
             //printf("train-gradient\n");
             // 计算输出层的梯度
             my_vector outputLayerGradient;
 
-            for (size_t neuronIndex = 0; neuronIndex < 1; ++neuronIndex) {
+            for (int neuronIndex = 0; neuronIndex < 1; ++neuronIndex) {
                 double error = label[dataIndex] - output[neuronIndex];
                 //outputLayerGradient.push_back(error * d_sigmoid(output[neuronIndex]));
                 outputLayerGradient.push_back(error * d_sigmoid(output_h[neuronIndex]));
@@ -376,12 +411,12 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
             std::vector<my_vector> layerGradients;
             layerGradients.push_back(outputLayerGradient);
             for (int layerIndex = h.size() - 2; layerIndex >= 0; --layerIndex) {
-                assert(layerIndex < w.size());  // 确保权重索引在范围内
+                //assert(layerIndex < w.size());  // 确保权重索引在范围内
                 my_vector layerGradient;
-                for (size_t neuronIndex = 0; neuronIndex < h[layerIndex].size(); ++neuronIndex) {
+                for (int neuronIndex = 0; neuronIndex < h[layerIndex].size(); ++neuronIndex) {
                     double gradientSum = 0;
-                    for (size_t nextLayerNeuronIndex = 0; nextLayerNeuronIndex < h[layerIndex + 1].size(); ++nextLayerNeuronIndex) {
-                        assert(layerIndex < w.size() && neuronIndex < w[layerIndex].size() && nextLayerNeuronIndex < w[layerIndex][neuronIndex].size()); // 确保权重索引在范围内
+                    for (int nextLayerNeuronIndex = 0; nextLayerNeuronIndex < h[layerIndex + 1].size(); ++nextLayerNeuronIndex) {
+                        //assert(layerIndex < w.size() && neuronIndex < w[layerIndex].size() && nextLayerNeuronIndex < w[layerIndex][neuronIndex].size()); // 确保权重索引在范围内
                         gradientSum += w[layerIndex][neuronIndex][nextLayerNeuronIndex] * layerGradients.back()[nextLayerNeuronIndex];
                     }
                     layerGradient.push_back(gradientSum * d_sigmoid(h[layerIndex][neuronIndex]));
@@ -390,11 +425,11 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
             }
             //printf("train-re-new\n");
             // 更新权重和偏置
-            for (size_t layerIndex = 0; layerIndex < w.size(); ++layerIndex) {
-                for (size_t neuronIndex = 0; neuronIndex < w[layerIndex].size(); ++neuronIndex) {
-                    for (size_t nextNeuronIndex = 0; nextNeuronIndex < w[layerIndex][neuronIndex].size(); ++nextNeuronIndex) {
-                        assert(layerIndex < h.size() && neuronIndex < h[layerIndex].size());  // 确保 h 的索引在范围内
-                        assert(neuronIndex < w[layerIndex].size() && nextNeuronIndex < w[layerIndex][neuronIndex].size());
+            for (int layerIndex = 0; layerIndex < w.size(); ++layerIndex) {
+                for (int neuronIndex = 0; neuronIndex < w[layerIndex].size(); ++neuronIndex) {
+                    for (int nextNeuronIndex = 0; nextNeuronIndex < w[layerIndex][neuronIndex].size(); ++nextNeuronIndex) {
+                        //assert(layerIndex < h.size() && neuronIndex < h[layerIndex].size());  // 确保 h 的索引在范围内
+                        //assert(neuronIndex < w[layerIndex].size() && nextNeuronIndex < w[layerIndex][neuronIndex].size());
                         //w[layerIndex][neuronIndex][nextNeuronIndex] += learning * h[layerIndex][neuronIndex] * layerGradients[w.size() - 1 - layerIndex][nextNeuronIndex];
                         w[layerIndex][neuronIndex][nextNeuronIndex] += learning * o[layerIndex][neuronIndex] * layerGradients[w.size() - 1 - layerIndex][nextNeuronIndex];
                         //printf("w is good!\n");
@@ -403,8 +438,8 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
                     //printf("finished cal w%d%d\n", layerIndex, neuronIndex);
                 }
                 //printf("finish cal w%d\n", layerIndex);
-                assert(layerIndex < b.size());  // 确保偏置索引在范围内
-                for (size_t biasIndex = 0; biasIndex < b[layerIndex].size(); ++biasIndex) {
+                //assert(layerIndex < b.size());  // 确保偏置索引在范围内
+                for (int biasIndex = 0; biasIndex < b[layerIndex].size(); ++biasIndex) {
                     b[layerIndex][biasIndex] += learning * layerGradients[layerGradients.size() - 1 - layerIndex][biasIndex];
                     //assert(layerIndex < layerGradients.size() && layerIndex >= 0);
                     //if (biasIndex >= layerGradients[layerIndex].size())
@@ -423,9 +458,9 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
         if (epoch % LR_VOKE) continue;
         printf("train-printloss\n");
         double loss = 0;
-        for (size_t dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
-            my_vector output = forward(data[dataIndex]);
-            for (size_t outputIndex = 0; outputIndex < output.size(); ++outputIndex) {
+        for (int dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
+            my_vector& output = forward(data[dataIndex]);
+            for (int outputIndex = 0; outputIndex < output.size(); ++outputIndex) {
                 //double error = label[dataIndex] - output[outputIndex];
                 //loss += error * error;  // MSE
                 loss += getMSELoss(label[dataIndex], output[outputIndex]);
@@ -447,9 +482,9 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
     }
 
     double loss = 0;
-    for (size_t dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
-        my_vector output = forward(data[dataIndex]);
-        for (size_t outputIndex = 0; outputIndex < output.size(); ++outputIndex) {
+    for (int dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
+        my_vector& output = forward(data[dataIndex]);
+        for (int outputIndex = 0; outputIndex < output.size(); ++outputIndex) {
             //double error = label[dataIndex] - output[outputIndex];
             //loss += error * error;  // MSE
             loss += getMSELoss(label[dataIndex], output[outputIndex]);
@@ -512,4 +547,7 @@ double MyNeuron::predict(my_vector& input, double threshold)
     return (forward(input)[0] > threshold ? 1.0 : 0.0);
 }
 
-int MyNeuron::LR_VOKE = 500;
+void MyNeuron::setLR_VOKE(int LR_VOKE)
+{
+    this->LR_VOKE = LR_VOKE;
+}

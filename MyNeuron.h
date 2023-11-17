@@ -1,7 +1,10 @@
 #ifndef _ETHY_NEURON_
 #define _ETHY_NEURON_ 1
 
-#include<bits/stdc++.h>
+//#include<bits/stdc++.h>
+#include<vector>
+#include<iostream>
+#include <cassert>
 #include <stdexcept> // 用于抛出异常
 #include <random> //随机数生成
 
@@ -18,12 +21,11 @@ w[h][i][j]. w is an instance of my_power(3d-vector of double)
 * 为单个输出和预测值计算MSE损失。
 calculate MSE loss for single output and single prediction.
 */
-inline double getMSELoss(double& x1, double& x2);
+inline double getMSELoss(double x1, double x2);
 
 class MyNeuron {
 private:
-	static int LR_VOKE;			//after LR_VOKE epoches, the prog will print the loss value , current w and b.
-	
+	int LR_VOKE;				//after LR_VOKE epoches, the prog will print the loss value , current w and b.
 	int epoches;				//learning times
 	double learning;			//study rate
 	my_power w;					//power, dimension is three
@@ -32,8 +34,9 @@ private:
 	std::vector<my_vector> o;	//after sigmoid output layer.
 	std::vector<my_vector> b;	//bias, dimension is 2 to fix each layer h.
 
-	bool isSameDouble(double d1, double d2);
+	void init(int epoches, double lr, std::vector<my_vector> h);
 
+	bool isSameDouble(double d1, double d2);
 
 	void calculateOutput(my_vector& x, my_vector& y, single_power& power, my_vector& bias, my_vector& o_sigmoid);
 	
@@ -60,6 +63,29 @@ public:
 	*/
 	MyNeuron(int epoches, double lr, std::vector<my_vector> h);
 	//MyNeuron(int epoches, double lr, std::vector<std::)
+
+	/*
+	@ params:
+	epoches: 迭代次数
+	lr: 学习率
+	inputSize: 输入维度
+	hiddenLayerSizes: 这个数组的的长度将会是隐藏层的长度，这个数组中的每个元素将会是每个隐藏层的维度。
+		例如输入{2,3,3}, 隐藏层第一层神经元数量是2，第二、三层神经元数量都是3.
+	*/
+	MyNeuron(int epoches, double lr, int inputSize, std::vector<int> hiddenLayerSizes);
+
+	/*
+	@ params:
+	epoches: 迭代次数
+	lr: 学习率
+	inputSize: 输入维度
+	hiddenLayerSizes: 这个数组的的长度将会是隐藏层的长度，这个数组中的每个元素将会是每个隐藏层的维度。
+		例如输入{2,3,3}, 隐藏层第一层神经元数量是2，第二、三层神经元数量都是3.
+	hidenSize: 由于参数传递是一个数组，所以需要传入一个数组（隐藏层数量）的长度。
+	@ comments
+	这个函数主要用于适配python，用于防止C++中vector传递和python中元组的传递出现的问题。
+	*/
+	MyNeuron(int epoches, double lr, int inputSize, int hiddenLayerSizes[], int hidenSize);
 
 	/*
 	激活函数。
@@ -112,6 +138,7 @@ public:
 	double predict(my_vector& input, double therehold);//todo
 
 	//void printLoss();
+	void setLR_VOKE(int LR_VOKE);
 };
 
 

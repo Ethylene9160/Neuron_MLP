@@ -18,6 +18,9 @@
     <ClInclude Include="MyNeuron.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="MPL.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -25,6 +28,9 @@
     </ClCompile>
     <ClCompile Include="MyNeuron.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MPL.cpp">
+      <Filter>资源文件</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

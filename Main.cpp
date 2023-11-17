@@ -1,15 +1,18 @@
-#include<bits/stdc++.h>
 #include <random>
+#include <cstdlib> // for std::srand
+#include <ctime>
 
 #include"MyNeuron.h"
+#include"MPL.h"
+
 
 bool judgeOther(double x, double y) {
     //区域：x和y处在x^2+y^2<0.25 or (x-1)^2+(y-1)^2<0.25的区域内
-    return (x * x + y * y < 0.25) || (x - 1) * (x - 1) < 0.25;
+    return (x * x + y * y < 0.25) || (x - 1) * (x - 1)+(y-1)*(y-1) < 0.25;
 }
 
 int main() {
-    std::srand(static_cast<unsigned>(std::time(0)));
+    std::srand(static_cast<unsigned>(time(0)));
     //printf("hello\n");
     // 创建训练数据
     // 使用随机设备作为种子
@@ -48,28 +51,37 @@ int main() {
     printf("The first step is over!\n");
 
     // 创建神经网络实例
-    MyNeuron neuron(10000, 0.025, { {0,0}, {0,0,0},{0,0, 0, 0,0,0,0,0,0}, {0} });  // 假设有 100 个 epoch 和 0.008 的学习率
+    //MyNeuron neuron(2000, 0.025, { {0,0}, {0,0, 0, 0,0,0,0,0,0}, {0} });  // 假设有 100 个 epoch 和 0.008 的学习率
+    int hiddenLayer[] = { 9 };
+    //MyNeuron neuron(2000, 0.025, 2, hiddenLayer, sizeof(hiddenLayer)/sizeof(hiddenLayer[0]));
+    MPL mpl(2000, 0.025, 2, hiddenLayer, sizeof(hiddenLayer) / sizeof(hiddenLayer[0]));
     printf("the neuron has been newed!\n");
     // 训练网络
-    neuron.train(trainData, trainLabel);
+    //neuron.train(trainData, trainLabel);
+    mpl.train(trainData, trainLabel);
     printf("some test data compare\n");
+    /*
     for (int i = 0; i < 5; ++i)
     {
         my_vector& outputs = neuron.predict(testData[i]);
         printf("input is: %f and %f\t\n", testData[i][0], testData[i][1]);
         printf("label is: %f, and prediction is %f\n", testLabel[i], outputs[0]);
     }
+    */
 
     int corSum = 0;
     for (int i = 0; i < 500; ++i) {
-        my_vector& out = neuron.predict(testData[i]);
-        if (out[0] == testLabel[i]) corSum += 1;
-    }
+        //my_vector& out = neuron.predict(testData[i]);
 
+        //if (out[0] == testLabel[i]) corSum += 1;
+        if (mpl.predict(testData[i], 0.5) == testLabel[i]) corSum += 1;
+    }
+    /*
     my_vector v = { {0.05}, {0.14} };
     my_vector& outputs = neuron.predict(v);
     printf("\n%f\n", outputs[0]);
-    printf("\ncorrect rate is：%f\n", (double)corSum / 500.0);
+    */
+    printf("\ncorrect rate is：%.1f\n", (double)corSum / 5.0);
     // 测试网络
     // ... 这里可以添加一些测试代码来验证网络的表现
     char xixixi = 0;
