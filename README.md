@@ -1,8 +1,8 @@
 # Neuron_MPL
 
-无法正常查看数学公式？点击[这里](null.html)
+无法正常查看数学公式？点击[这里](null.html)（还没转html（））
 
-笨人无才，仓库名字打错了。
+笨人无才，仓库名字打错了w。
 
 基于C++实现的神经网络。
 
@@ -31,7 +31,7 @@ typedef std::vector<single_power> my_power;
 
 * 方法
 
-`MyNeuron();`：空构造器。默认调用`MyNeuron(100,0.01)`
+`MyNeuron(); 空构造器。默认调用`MyNeuron(100,0.01)`
 
 `MyNeuron(int epoches, double lr);` 默认构造输入大小为2，隐藏层为1层（含3个神经元）的神经网络。即默认调用`MyNeuron(epoches, lr, 2, {3})`
 
@@ -178,21 +178,27 @@ my_vector& forward(my_vector& data){
 
 
 $$
+\delta \omega_{ki}=\frac{d E}{d \pmb{ \omega_{k}}}\cdot lr
+\\
 \frac{\part E}{\part \omega_{ki}}=
 \frac{\part E}{\part o_k}
 \frac{\part o_k}{\part z_k}
 \frac{\part z_k}{\part w_{ki}}
 $$
-其中，E表示输出神经元的标签与预测值的损失函数：
+<p align='center'><font size=3>式3-2</font></p>
+
+其中，E表示输出神经元的标签与预测值的损失函数。本文将以这个三层的神经网络为例（其中偏置未被画出，将在之后单独给出偏置的推导）。
+
+![image-20231117201805088](README.assets/image-20231117201805088.png)
 
 * 从输出层开始的反向计算
 
-  $E=\frac 12(y_{pred}-y_{label})^2$。在这一层，$y_{pred}$就是$\part o_k$。得到：
+  $E=\frac 12(y_{pred}-y_{label})^2$。在这一层，$y_{pred}$就是$o_k$。得到：
   $$
   \frac{\part E}{\part o_k}=
   y_{pred}-y_{label}
   $$
-  <p align='center'><font size=3>式3-2</font></p>
+  <p align='center'><font size=3>式3-3</font></p>
   
   由于使用激活函数g(z)，于是$o_k=g(z_k)$, 那么：
   $$
@@ -215,7 +221,9 @@ $$
   \frac{\part h(i+1,k)}{\part w_{ijk}}\\=
   o(i,j)
   $$
-  于是对于输出层：==todo 插入图片后，重新更新下标。==
+  于是对于输出层：
+  
+  
   $$
   \frac{\part E}{\part \omega_{ki}}=
   (y_{pred}-y_{label})\cdot
@@ -223,23 +231,84 @@ $$
   o(i,j)
   $$
   
+  
+  
+  例如对于这个输出层的模型，如果我们要计算损失值对$\omega_0$的偏导数：
+  
+  ![image-20231117195352393](README.assets/image-20231117195352393.png)
+  $$
+  \frac{\part E}{\part \omega_{0}}=
+  (o_y-y_{label})\cdot
+  g'(h_y)\cdot
+  o_0\\
+  $$
+  图中，$o_0~o_1$表示上一层输出（经过激活函数的h），其中，图中的$o_y$即为$y_{pred}$。
+  
+  那么，bias怎么办呢？回顾前向计算公式，仍然以这个例子为例：
+  $$
+  o_y=g(o_0\omega_0+o_1\omega_1+b_y)\\
+  $$
+  误差函数对$\omega$的雅可比可以表示为：
+  $$
+  \frac{d E}{d \pmb \omega}=
+  \frac{\part E}{\part \omega_{0}}+\frac{\part E}{\part \omega_{1}}
+  $$
+  
+  <p align='center'><font size=3>式3-4</font></p>
+  
+  对于bias：可以把bias看作是一个从上一层恒定输出为1，权重为$b_y$的一个传递：![image-20231117203825731](README.assets/image-20231117203825731.png)
+  
+  显然，它可以被等效为：
+  
+  
+  $$
+  \frac{\part E}{\part b_y}=
+  (o_y-y_{label})\cdot
+  g'(h_y)\cdot
+  1\\
+  \rightarrow 
+  \delta b_y = %\frac{d E}{d ( \pmb{\omega\cdot o})} \cdot lr\\=
+  (o_y-y_{label})\cdot
+  g'(h_y)\cdot
+  lr\\
+  $$
+  
+  最后，得到一组更新公式：
+  
+  $$
+  \delta \omega_i=
+  (o_y-y_{label})\cdot
+  g'(h_y)\cdot
+  o_i\cdot lr\\
+  \delta b_y = %\frac{d E}{d ( \pmb{\omega\cdot o})} \cdot lr\\=
+  (o_y-y_{label})\cdot
+  g'(h_y)\cdot
+  lr
+  $$
+  
+  注意到，两组数据都有$(o_y-y_{label})\cdot
+  g'(h_y)$。为了简化运算，笔者将使用`std::vector<std::Vector>> layerGradients`(注意变量名，有's')对其进行保存以降低时间复杂度。在C++中表示为
+  
   ```C++
   void backward(my_vector&data, double y_label){
       my_vector&output_o = forward(data);
       my_vector&output_h = h[h.size()-1];
-      double y_pred = output_o[o.size()-1];
+      double y_pred = output_o[0];
       
-      double error = y_pred - y_label;
-      //计算E对w的偏导数。输出层，只有一个。
+      double error = y_pred - y_label;//注意：这里与MyNeuron.cpp的实现不同。原工程文件中定义error=y_label - y_pred，因此后面更新梯度时，原文件里第434行，第443行使用的是加号而非减号。
+      //计算E对w的偏导数的梯度，即(o_y-y_label)*g'(h)。输出层，只有一个。
       my_vector outputLayerGradient(1, error*d_sigmoid(output_h[0]));
       //...
   }
-  
   ```
+  
+  *注意*： `std::vector<T>(int size, T elm)`这个构造器表示，构建一个长度为size，每个元素为elm的数组。
   
 * 隐藏层和输入层
 
-  预留
+  在输出层表明了label之后，我们可以根据后面的数据，逐层往前传递。隐藏层的推导和输出层的推导方法基本一致。只是需要注意error的计算。==todo==
+
+  
 
   预留
 
@@ -249,7 +318,7 @@ $$
   void backward(my_vector&data, double y_label){
       //...
       std::my_vector<my_vector> layerGradients;
-  layerGradients.push_back(outputLayer);
+  	layerGradients.push_back(outputLayer);//将输出层梯度
       //从后往前传
       for(int layerIndex = h.size()-2; layerIndex>=0; --layerIndex){
           my_vector layerGradient;
@@ -267,12 +336,13 @@ $$
   }
   ```
 
+  *注意*：`std::vector<T>.push_back(T)`表示在vector尾部插入元素，`std::vector<T>.insert(0, T)`表示在vector头部插入元素。T为要插入的元素。
+
 * 更新权重与偏置：乘以学习率和上一层的输出。
 
   预留
 
   ```c++
-  
   void backward(my_vector&data, double y_label){
           //...
           std::my_vector<my_vector> layerGradients;
@@ -294,16 +364,16 @@ $$
           for (int layerIndex = 0; layerIndex < w.size(); ++layerIndex) {
               for (int neuronIndex = 0; neuronIndex < w[layerIndex].size(); ++neuronIndex) {
                   for (int nextNeuronIndex = 0; nextNeuronIndex < w[layerIndex][neuronIndex].size(); ++nextNeuronIndex) {
-                      w[layerIndex][neuronIndex][nextNeuronIndex] += learning * o[layerIndex][neuronIndex] * layerGradients[layerIndex][nextNeuronIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
+                      w[layerIndex][neuronIndex][nextNeuronIndex] -= learning * o[layerIndex][neuronIndex] * layerGradients[layerIndex][nextNeuronIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
                   }
               }
               for (int biasIndex = 0; biasIndex < b[layerIndex].size(); ++biasIndex) {
-                  b[layerIndex][biasIndex] += learning * layerGradients[layerIndex][biasIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
+                  b[layerIndex][biasIndex] -= learning * layerGradients[layerIndex][biasIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
           }
       }
   }
   ```
-
+  
 * 训练
 
   预留
@@ -394,6 +464,26 @@ cmake --build . --config Release
   #include <random>
   #include <cstdlib> 
   #include <ctime>
+  ```
+
+  在python中，完成：
+
+  ```python
+  import cppyy
+  import ctypes
+  cppyy.include("path/to/your/PY_MPL.dll")
+  ```
+
+  新建实例：
+
+  ```python
+  mpl = cppyy.gbl.PY_MPL()
+  hlv = cppyy.gbl.std.vector[int]([2,3,3]) # 新建std::vector<int>类型的实例变量。注意，vector的传递需要进行打包。
+  mn.initMPL(20000,0.085,2,hlv) # 仅提供一个初始化函数。参数列表为：
+  # int epoches
+  # double lr
+  # int inputSize
+  # std::Vector<int> hiddenLayerSizes
   ```
 
   
