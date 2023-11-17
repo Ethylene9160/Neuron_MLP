@@ -280,9 +280,9 @@ my_vector&MyNeuron::forward(my_vector& data)
 */
 my_vector& MyNeuron::forward(my_vector& data) {
     // 确保输入数据的尺寸与网络输入层的尺寸相匹配
-    if (data.size() != h[0].size()) {
-        throw std::invalid_argument("Size of input data does not match the size of the network's input layer.");
-    }
+    //if (data.size() != h[0].size()) {
+        //throw std::invalid_argument("Size of input data does not match the size of the network's input layer.");
+    //}
 
     // 用输入数据初始化第一层的输出
     h[0].assign(data.begin(), data.end());
@@ -291,9 +291,9 @@ my_vector& MyNeuron::forward(my_vector& data) {
     int i_max = this->h.size() - 1;
     for (int i = 0; i < i_max; i++) {
         // 在进行矩阵乘法之前，确保索引有效
-        if (i >= w.size() || i + 1 >= h.size() || i + 1 >= b.size()) {
-            throw std::out_of_range("Index out of range during forward pass.");
-        }
+        //if (i >= w.size() || i + 1 >= h.size() || i + 1 >= b.size()) {
+            //throw std::out_of_range("Index out of range during forward pass.");
+        //}
 
         // 检查权重矩阵的维度是否正确
         //if (h[i].size() != w[i].size()) {
@@ -385,7 +385,7 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label)
 */
 
 void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
-    assert(data.size() == label.size());  // 确保数据和标签的数量匹配
+    //assert(data.size() == label.size());  // 确保数据和标签的数量匹配
     //假定输出维度为1*1.多维输出能力不够，不会。
     for (int epoch = 0; epoch < epoches; ++epoch) {
         for (int dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
@@ -459,7 +459,7 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
         printf("train-printloss\n");
         double loss = 0;
         for (int dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
-            my_vector output = forward(data[dataIndex]);
+            my_vector& output = forward(data[dataIndex]);
             for (int outputIndex = 0; outputIndex < output.size(); ++outputIndex) {
                 //double error = label[dataIndex] - output[outputIndex];
                 //loss += error * error;  // MSE
@@ -483,7 +483,7 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
 
     double loss = 0;
     for (int dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
-        my_vector output = forward(data[dataIndex]);
+        my_vector& output = forward(data[dataIndex]);
         for (int outputIndex = 0; outputIndex < output.size(); ++outputIndex) {
             //double error = label[dataIndex] - output[outputIndex];
             //loss += error * error;  // MSE
