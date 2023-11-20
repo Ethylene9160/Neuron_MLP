@@ -193,7 +193,7 @@ $$
 
 其中，E表示输出神经元的标签与预测值的损失函数。本文将以这个三层的神经网络为例（其中偏置未被画出，将在之后单独给出偏置的推导）。
 
-![image-20231117201805088](README.assets/image-20231117201805088.png)
+![image-20231117201805088](README.assets/full_neurons.png)
 
 * 从输出层开始的反向计算
 
@@ -239,7 +239,7 @@ $$
   
   例如对于这个输出层的模型，如果我们要计算损失值对$\omega_0$的偏导数：
   
-  ![image-20231117195352393](README.assets/image-20231117195352393.png)
+  ![image-20231117195352393](README.assets/output1.png)
   $$
   \frac{\part E}{\part \omega_{0}}=
   (o_y-y_{label})\cdot
@@ -260,7 +260,7 @@ $$
   
   <p align='center'><font size=3>式3-4</font></p>
   
-  对于bias：可以把bias看作是一个从上一层恒定输出为1，权重为$b_y$的一个传递：![image-20231117203825731](README.assets/image-20231117203825731.png)
+  对于bias：可以把bias看作是一个从上一层恒定输出为1，权重为$b_y$的一个传递：![image-20231117203825731](README.assets/output2.png)
   
   显然，它可以被等效为：
   
