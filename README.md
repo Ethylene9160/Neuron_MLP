@@ -1,4 +1,6 @@
-# Neuron_MPL
+# Neuron_MLP
+
+![Static Badge](https://img.shields.io/badge/C%2B%2B-11-blue)
 
 无法正常查看数学公式？点击[这里](null.html)（还没转html（））
 
@@ -374,6 +376,8 @@ $$
   }
   ```
   
+  优化：使用`std::vector<T>.push_back(T)`或`std::Vector<T>.insert(T)`操作可能会多次进行操作空间开辟和拷贝（层数少的时候这个空间开辟数量会减少，时间消耗可以接近于传统赋值操作），影响效率，可以考虑提前声明合适长度的数组，然后对每个元素进行赋值操作。
+  
 * 训练
 
   预留
@@ -477,13 +481,15 @@ cmake --build . --config Release
   新建实例：
 
   ```python
-  mpl = cppyy.gbl.PY_MPL()
+  mpl = cppyy.gbl.PY_MPL() # 仅提供默认构造函数。使用initMPL函数对其进行初始化。
   hlv = cppyy.gbl.std.vector[int]([2,3,3]) # 新建std::vector<int>类型的实例变量。注意，vector的传递需要进行打包。
-  mn.initMPL(20000,0.085,2,hlv) # 仅提供一个初始化函数。参数列表为：
+  
+  # 仅提供一个初始化函数。参数列表为：
   # int epoches
   # double lr
   # int inputSize
   # std::Vector<int> hiddenLayerSizes
+  mlp.initMPL(20000,0.085,2,hlv) 
   ```
-
+  
   

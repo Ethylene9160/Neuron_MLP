@@ -5,6 +5,28 @@
 #include"MyNeuron.h"
 #include"MPL.h"
 
+#include "FileController.h"
+
+class ReLuMLP:public MyNeuron {
+
+
+    double sigmoid(double x) override {
+        return x > 0.0 ? x : 0.0;
+    }
+
+    double d_sigmoid(double x) override {
+        return x > 0.0 ? 1.0 : 0.0;
+    }
+public:
+    ReLuMLP(int ep, double lr, int is, std::vector<int>& layers) :MyNeuron(ep, lr, is, layers) {}
+};
+
+
+class OrthReLuMLP :public ReLuMLP{
+    void orth(std::vector<double>& data) override {
+
+    }
+};
 
 bool judgeOther(double x, double y) {
     //区域：x和y处在x^2+y^2<0.25 or (x-1)^2+(y-1)^2<0.25的区域内
@@ -35,6 +57,10 @@ int main() {
         //trainLabel[i] = (x*x + y*y > 1 ? 1.0 : 0.0);  // 圆
         trainLabel[i] = judgeOther(x, y) ? 1.0 : 0.0;
     }
+
+    //写入数据到本地
+    saveDataToFile(trainData, trainLabel, "data.txt");
+
     std::vector<my_vector> testData(500);
     my_vector testLabel(500);
 
@@ -52,14 +78,25 @@ int main() {
 
     // 创建神经网络实例
     //MyNeuron neuron(2000, 0.025, { {0,0}, {0,0, 0, 0,0,0,0,0,0}, {0} });  // 假设有 100 个 epoch 和 0.008 的学习率
-    int hiddenLayer[] = { 9 };
+    //int hiddenLayer[] = { 3,5 };
     //MyNeuron neuron(2000, 0.025, 2, hiddenLayer, sizeof(hiddenLayer)/sizeof(hiddenLayer[0]));
-    MPL mpl(2000, 0.025, 2, hiddenLayer, sizeof(hiddenLayer) / sizeof(hiddenLayer[0]));
-    printf("the neuron has been newed!\n");
+    //MPL mpl(2000, 0.025, 2, hiddenLayer, sizeof(hiddenLayer) / sizeof(hiddenLayer[0]));
+    //printf("the neuron has been newed!\n");
     // 训练网络
     //neuron.train(trainData, trainLabel);
-    mpl.train(trainData, trainLabel);
+    //mpl.train(trainData, trainLabel);
+
+    std::vector<int> layers = { 3,5,11,2,4};
+    MyNeuron sigmoidNeuron(4000, 0.03, 2, layers);
+    ReLuMLP reLuNeuron(4000, 0.03, 2, layers);
     printf("some test data compare\n");
+    sigmoidNeuron.setLR_VOKE(1000);
+    reLuNeuron.setLR_VOKE(1000);
+
+    //读取data
+    loadDataFromFile(trainData, trainLabel, "data.txt");
+    sigmoidNeuron.train(trainData, trainLabel);
+    reLuNeuron.train(trainData, trainLabel);
     /*
     for (int i = 0; i < 5; ++i)
     {
@@ -69,19 +106,23 @@ int main() {
     }
     */
 
-    int corSum = 0;
+    //int corSum = 0;
+    int sigmoidSum = 0, reLuSum = 0;
     for (int i = 0; i < 500; ++i) {
         //my_vector& out = neuron.predict(testData[i]);
-
+        if (sigmoidNeuron.predict(testData[i], 0.5) == testLabel[i]) sigmoidSum += 1;
+        if (reLuNeuron.predict(testData[i], 0.5) == testLabel[i]) reLuSum += 1;
         //if (out[0] == testLabel[i]) corSum += 1;
-        if (mpl.predict(testData[i], 0.5) == testLabel[i]) corSum += 1;
+        //if (mpl.predict(testData[i], 0.5) == testLabel[i]) corSum += 1;
     }
     /*
     my_vector v = { {0.05}, {0.14} };
     my_vector& outputs = neuron.predict(v);
     printf("\n%f\n", outputs[0]);
     */
-    printf("\ncorrect rate is：%.1f\n", (double)corSum / 5.0);
+    //printf("\ncorrect rate is：%.1f\n", (double)corSum / 5.0);
+    printf("\ncorrect rate of sigmoid is:%.1f\n", (double)sigmoidSum / 5.0);
+    printf("\ncorrect rate of ReLu is:%.1f\n", (double)reLuSum / 5.0);
     // 测试网络
     // ... 这里可以添加一些测试代码来验证网络的表现
     char xixixi = 0;
