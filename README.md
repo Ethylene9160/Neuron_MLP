@@ -166,7 +166,7 @@ my_vector& forward(my_vector& data){
             //加上偏置
             h[layerIndex+1][nextNeuronIndex] += b[layerIndex+1][nextNeuronIndex];
             //应用激活函数
-             o[layerIndex+1][nextNeuronIndex] = sigmoid( h[layerIndex+1][nextNeuronIndex]);
+            o[layerIndex+1][nextNeuronIndex] = sigmoid( h[layerIndex+1][nextNeuronIndex]);
         }
     }
     // 返回最后一层的输出
@@ -289,6 +289,11 @@ $$
   g'(h_y)\cdot
   lr
   $$
+  
+  <p align = 'center'><font size = 3>
+      式3-5
+      </font>
+  </p>
   
   注意到，两组数据都有$(o_y-y_{label})\cdot
   g'(h_y)$。为了简化运算，笔者将使用`std::vector<std::Vector>> layerGradients`(注意变量名，有's')对其进行保存以降低时间复杂度。在C++中表示为
@@ -456,8 +461,47 @@ cmake --build . --config Release
 
 解决梯度消失：<!-->todo: 叙述梯度消失与爆炸的解决方案<-->
 
+根据梯度更新公式（式3-5）：
+$$
+\delta \omega_i=
+(o_y-y_{label})\cdot
+g'(h_y)\cdot
+o_i\cdot lr\\
+\delta b_y = %\frac{d E}{d ( \pmb{\omega\cdot o})} \cdot lr\\=
+(o_y-y_{label})\cdot
+g'(h_y)\cdot
+lr
+$$
+使用sigmoid函数作为激活函数，显然我们发现：
+$$
+\frac{d}{dx}sigmoid(x)=\frac{
+	e^{-x}
+}{
+	(1+e^{-x})^2
+}
+\\
+\frac{d^2}{dx^2}sigmoid(x)=
+\frac{
+	-e^{-x}(1-e^{-x})
+}{
+	(1+e^{-x})^3
+}
+$$
+对其二阶导进行分析，可知：
+
+|              | x<0              | x=0              | x>0              |
+| ------------ | ---------------- | ---------------- | ---------------- |
+| sigmoid'(x)  | 单调增           | 最大值=0.25      | 单调减           |
+| sigmoid''(x) | $sigmoid''(x)>0$ | $sigmoid''(x)=0$ | $sigmoid''(x)<0$ |
+
+![image-20231120191915420](README.assets/image-20231120191915420.png)
+
+<p align = 'center'>图4-1 sigmoid的导函数图<font size=3></font></p>
+
+也就是说，每一次梯度更新，从后往前，每递推一层，error变化差异的显著性不会超过上一层的$\frac14$
+
 ```c++
-class ReLuMLP:public MyNeuron {
+class ReLuMLP:public MyNeuron {。
     double sigmoid(double x) override {
         return x > 0.0 ? x : 0.0;
     }
@@ -480,8 +524,6 @@ public:
 correct rate using sigmoid: 63.2% with loss 0.230864
 correct rate using reLU:	97.8% with loss 0.007517
 ```
-
-
 
 # Dependences
 
