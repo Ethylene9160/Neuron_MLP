@@ -2,6 +2,8 @@
 
 ![Static Badge](https://img.shields.io/badge/C%2B%2B-11-blue)
 
+![Static Badge2](https://img.shields.io/badge/python-3.9-yellow)
+
 无法正常查看数学公式？点击[这里](null.html)（还没转html（））
 
 笨人无才，仓库名字打错了w。
@@ -447,6 +449,37 @@ cmake --build . --config Release
 ```
 
 在同目录的Release文件夹下的build目录内，找到bin或者lib目录（或者其他），在其中可以找到对应的`.dll`动态链接库
+
+# Problems to be solven
+
+## Disappearance and Dxplosion in Gradient Calculating
+
+解决梯度消失：<!-->todo: 叙述梯度消失与爆炸的解决方案<-->
+
+```c++
+class ReLuMLP:public MyNeuron {
+    double sigmoid(double x) override {
+        return x > 0.0 ? x : 0.0;
+    }
+
+    double d_sigmoid(double x) override {
+        return x > 0.0 ? 1.0 : 0.0;
+    }
+public:
+    ReLuMLP(int ep, double lr, int is, std::vector<int>& layers) :MyNeuron(ep, lr, is, layers) {}
+};
+```
+
+测试：
+
+使用600个数据进行训练，迭代4000次，对7层神经网络（二维输入，一维输出，隐藏层神经元数量分别为3，5，16，2，4，7）进行测试。使用500个数据进行测试。
+
+得：
+
+```bash
+correct rate using sigmoid: 63.2% with loss 0.230864
+correct rate using reLU:	97.8% with loss 0.007517
+```
 
 
 
