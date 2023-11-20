@@ -46,6 +46,8 @@ private:
 	//deprecated
 	void backward(std::vector<my_vector>& data, my_vector& labels);
 
+	virtual void orth(my_vector& data);
+
 public:
 	/*
 	空构造器。默认epoches=100, lr=0.01
@@ -90,12 +92,12 @@ public:
 	/*
 	激活函数。
 	*/
-	double sigmoid(double x);
+	virtual double sigmoid(double x);
 
 	/*
 	激活函数的导函数
 	*/
-	double d_sigmoid(double x);
+	virtual double d_sigmoid(double x);
 
 	/*
 	前向计算。放入输入（一个一维浮点序列）。若输入维度和构造器设定的输入layer的维度不同，程序将会退出。

@@ -122,6 +122,7 @@ void MyNeuron::calculateOutput(my_vector& x, my_vector& y, single_power& power, 
         // 应用激活函数
         o_sigmoid[j] = this->sigmoid(y[j]);
     }
+    orth(y);//正则化
     /*
     for (int j = 0; j < y.size(); ++j) {
         y[j] = 0.0;
@@ -186,6 +187,20 @@ void MyNeuron::backward(std::vector<my_vector>& data, my_vector& labels)
 
 }
 
+void MyNeuron::orth(my_vector& data)
+{
+    return;
+    int size = data.size();
+    double sum = 0.0;
+    for (auto d : data) {
+        sum += d*d;
+    }
+    sum = sqrt(sum);
+    for (auto& d : data) {
+        d = d / sum;
+    }
+}
+
 MyNeuron::MyNeuron() :MyNeuron(100, 0.01)
 {
 }
@@ -232,6 +247,7 @@ MyNeuron::MyNeuron(int epoches, double lr, int inputSize, int hiddenLayerSizes[]
 
 double MyNeuron::sigmoid(double x)
 {
+    //return x > 0 ? x : 0;
     return 1 / (1 + exp(-x));
 }
 
@@ -241,6 +257,7 @@ double MyNeuron::d_sigmoid(double x)
     // exp(-x)(1+exp(-x))^-2
     //=1/(1+exp(-x)) times exp(-x)/(1+exp(-x))
     // to lower the time complexity, use y.
+    //return x > 0 ? 1.0 : 0.0;
     double y = sigmoid(x);
     return y * (1 - y);
 }
