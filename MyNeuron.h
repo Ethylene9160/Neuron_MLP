@@ -7,6 +7,7 @@
 #include <cassert>
 #include <stdexcept> // 用于抛出异常
 #include <random> //随机数生成
+#include <ctime>
 
 typedef std::vector<double> my_vector;// to make it easier for programming.
 typedef std::vector<my_vector> single_power;
@@ -24,21 +25,23 @@ calculate MSE loss for single output and single prediction.
 inline double getMSELoss(double x1, double x2);
 
 class MyNeuron {
-private:
-	int LR_VOKE;				//after LR_VOKE epoches, the prog will print the loss value , current w and b.
-	int epoches;				//learning times
-	double learning;			//study rate
-	my_power w;					//power, dimension is three
-	//my_vector output;			//dinal output, dimension is one
-	std::vector<my_vector> h;	//layer output storage; dimension is 2;
-	std::vector<my_vector> o;	//after sigmoid output layer.
-	std::vector<my_vector> b;	//bias, dimension is 2 to fix each layer h.
+protected:
+	int LR_VOKE;					//after LR_VOKE epoches, the prog will print the loss value , current w and b.
+	int epoches;					//learning times
+	double learning;				//study rate
+	//double lambda;					//batch normalization
+	my_power w;						//power, dimension is three
+	//my_vector output;				//dinal output, dimension is one
+	std::vector<my_vector> h;		//layer output storage; dimension is 2;
+	std::vector<my_vector> batch_o;	//using batch normalization.
+	std::vector<my_vector> o;		//after sigmoid output layer.
+	std::vector<my_vector> b;		//bias, dimension is 2 to fix each layer h.
 
 	void init(int epoches, double lr, std::vector<my_vector> h);
 
 	bool isSameDouble(double d1, double d2);
 
-	void calculateOutput(my_vector& x, my_vector& y, single_power& power, my_vector& bias, my_vector& o_sigmoid);
+	void calculateOutput(my_vector& x, my_vector& y, my_vector& patch_output, single_power& power, my_vector& bias, my_vector& o_sigmoid, bool shouldOrth);
 	
 	//deprecated
 	void train(my_vector& input, my_vector& labels);
@@ -46,7 +49,7 @@ private:
 	//deprecated
 	void backward(std::vector<my_vector>& data, my_vector& labels);
 
-	virtual void orth(my_vector& data);
+	virtual void orth(my_vector & self_h, my_vector& batch_output);
 
 public:
 	/*
@@ -88,6 +91,11 @@ public:
 	这个函数主要用于适配python，用于防止C++中vector传递和python中元组的传递出现的问题。
 	*/
 	MyNeuron(int epoches, double lr, int inputSize, int hiddenLayerSizes[], int hidenSize);
+
+	/*
+	* 设置正则化偏置的值。
+	*/
+	void setLambda(double lambda);
 
 	/*
 	激活函数。

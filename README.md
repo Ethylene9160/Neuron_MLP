@@ -12,6 +12,32 @@
 
 如需在python中使用，请保证支持C++11及以上标准。
 
+* 仓库结构（笑兮了 基本都混在根目录）
+
+```bash
+│  .gitattributes
+│  .gitignore
+│  data.txt
+│  FileController.h
+│  LICENSE.txt
+│  list.txt
+│  Main.cpp
+│  Main.exe
+│  MPL.cpp
+│  MPL.h
+│  MyNeuron.cpp
+│  MyNeuron.h
+│  Neuron_MLP.sln
+│  Neuron_MLP.vcxproj
+│  Neuron_MLP.vcxproj.filters
+│  Neuron_MLP.vcxproj.user
+│  README.md
+├─README.assets
+└─x64
+```
+
+
+
 ## 宏
 
 使用`ETHY_NEURON`作为宏保护。
@@ -223,7 +249,8 @@ $$
   $$
   \frac{\part z_k}{\part w_{ki}}=
   \frac{\part h(i+1,k)}{\part w_{ijk}}\\=
-  o(i,j)
+  o(i,j)\\
+  h_y=\sum_i\omega_io_i+b_y
   $$
   于是对于输出层：
   
@@ -231,6 +258,11 @@ $$
   $$
   \frac{\part E}{\part \omega_{ki}}=
   (y_{pred}-y_{label})\cdot
+  g'(z_k)\cdot
+  o(i,j)\\
+  
+  \frac{\part E}{\part \omega_{i}}=
+  (o_y-y_{label})\cdot
   g'(z_k)\cdot
   o(i,j)
   $$
@@ -294,6 +326,41 @@ $$
       式3-5
       </font>
   </p>
+  > 推广-输出层梯度的雅可比的表示
+  >
+  > * 雅可比矩阵：
+  >
+  > 假设一个多变量矩阵F，表示为：
+  > $$
+  > F(x,y)=\begin{bmatrix}
+  > f_{11}(x,y),~f_{12}(x,y)~\\
+  > f_{21}(x,y),~f_{22}(x,y)~\\
+  > f_{31}(x,y),~f_{32}(x,y)~\\
+  > \end{bmatrix}
+  > $$
+  > 它对x, y的雅可比矩阵可以表示为：
+  > $$
+  > J(F(x,y)) = \begin{bmatrix}
+  > \frac{\part F(x,y)}{\part x},~
+  > \frac{\part F(x,y)}{\part y}%,~
+  > %\frac{\part F(x,y,z)}{\part z}
+  > \end{bmatrix}\\
+  > =\begin{bmatrix}
+  > 	\frac {\part f_{11}(x,y)}{\part x}~\frac {\part f_{11}(x,y)}{\part y}~
+  > 	\frac {\part f_{12}(x,y)}{\part x}~\frac {\part f_{12}(x,y)}{\part y}\\
+  > 	\frac {\part f_{21}(x,y)}{\part x}~\frac {\part f_{21}(x,y)}{\part y}~
+  > 	\frac {\part f_{22}(x,y)}{\part x}~\frac {\part f_{22}(x,y)}{\part y}\\
+  > 	\frac {\part f_{31}(x,y)}{\part x}~\frac {\part f_{31}(x,y)}{\part y}~
+  > 	\frac {\part f_{32}(x,y)}{\part x}~\frac {\part f_{32}(x,y)}{\part y}\\
+  > \end{bmatrix}
+  > $$
+  > 因此，参照式3-4可知，对于图3-1示输出层（不考虑偏置）：
+  > $$
+  > J(E)=\begin{bmatrix}
+  > \frac{\part E}{\part \omega_{0}},~\frac{\part E}{\part \omega_{1}}
+  > \end{bmatrix}
+  > $$
+  > 
   
   注意到，两组数据都有$(o_y-y_{label})\cdot
   g'(h_y)$。为了简化运算，笔者将使用`std::vector<std::Vector>> layerGradients`(注意变量名，有's')对其进行保存以降低时间复杂度。在C++中表示为
@@ -353,32 +420,32 @@ $$
 
   ```c++
   void backward(my_vector&data, double y_label){
-          //...
-          std::my_vector<my_vector> layerGradients;
+      //...
+      std::my_vector<my_vector> layerGradients;
       layerGradients.push_back(outputLayer);
-          //从后往前传
-          for(int layerIndex = h.size()-2; layerIndex>=0; --layerIndex){
+      //从后往前传
+      for(int layerIndex = h.size()-2; layerIndex>=0; --layerIndex){
               my_vector layerGradient;
-              //计算该层神经元
-              for(int neuronIndex = 0; neuronIndex<h[layerIndex].size; ++neuronIndex){
+          //计算该层神经元
+          for(int neuronIndex = 0; neuronIndex<h[layerIndex].size; ++neuronIndex){
                   double gradientSum = 0.0;
-                  for(int nextNeuronIndex = 0; nextNeuronIndex<h[layerIndex+1]; ++nextNeuronIndex){
-                      gradientSum += w[layerIndex][neuronIndex][nextNeuronIndex] * layerGradients[0][nextNeuronIndex];//todo: check正向加入的layerGradients是否正确！
-                  }
-                  layerGradient.push_back(gradientSum*d_sigmoid(h[layerIndex][neuronIndex]));
+              for(int nextNeuronIndex = 0; nextNeuronIndex<h[layerIndex+1]; ++nextNeuronIndex){
+                  gradientSum += w[layerIndex][neuronIndex][nextNeuronIndex] * layerGradients[0][nextNeuronIndex];//todo: check正向加入的layerGradients是否正确！
               }
-              layerGradients.insert(0, layerGradient);//插入到首位
+              layerGradient.push_back(gradientSum*d_sigmoid(h[layerIndex][neuronIndex]));
           }
-          //...
-          for (int layerIndex = 0; layerIndex < w.size(); ++layerIndex) {
-              for (int neuronIndex = 0; neuronIndex < w[layerIndex].size(); ++neuronIndex) {
-                  for (int nextNeuronIndex = 0; nextNeuronIndex < w[layerIndex][neuronIndex].size(); ++nextNeuronIndex) {
-                      w[layerIndex][neuronIndex][nextNeuronIndex] -= learning * o[layerIndex][neuronIndex] * layerGradients[layerIndex][nextNeuronIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
-                  }
+          layerGradients.insert(0, layerGradient);//插入到首位
+      }
+      //...
+      for (int layerIndex = 0; layerIndex < w.size(); ++layerIndex) {
+          for (int neuronIndex = 0; neuronIndex < w[layerIndex].size(); ++neuronIndex) {
+              for (int nextNeuronIndex = 0; nextNeuronIndex < w[layerIndex][neuronIndex].size(); ++nextNeuronIndex) {
+                  w[layerIndex][neuronIndex][nextNeuronIndex] -= learning * o[layerIndex][neuronIndex] * layerGradients[layerIndex][nextNeuronIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
               }
-              for (int biasIndex = 0; biasIndex < b[layerIndex].size(); ++biasIndex) {
-                  b[layerIndex][biasIndex] -= learning * layerGradients[layerIndex][biasIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
           }
+          for (int biasIndex = 0; biasIndex < b[layerIndex].size(); ++biasIndex) {
+              b[layerIndex][biasIndex] -= learning * layerGradients[layerIndex][biasIndex];//check: 更新到顺序运算后，检查训练结果有没有问题。
+      	}
       }
   }
   ```
@@ -521,7 +588,7 @@ public:
 得：
 
 ```bash
-correct rate using sigmoid: 63.2% with loss 0.230864
+correct rate using sigmoid:	63.2% with loss 0.230864
 correct rate using reLU:	97.8% with loss 0.007517
 ```
 

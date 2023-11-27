@@ -31,6 +31,7 @@ void MyNeuron::init(int epoches, double lr, std::vector<my_vector> h)
     this->learning = lr;
     //this->layers = layers;
     this->h = h;
+    this->batch_o = h;
     this->o = h;
     this->b = std::vector<my_vector>(h.size());
     printf("size of h is: \n");
@@ -62,6 +63,7 @@ void MyNeuron::init(int epoches, double lr, std::vector<my_vector> h)
             for (int k = 0; k < w[i][j].size(); ++k) {
                 w[i][j][k] = distribution(generator); // 使用随机数填充
             }
+            b[i][j] = distribution(generator);
         }
     }
 
@@ -96,7 +98,7 @@ bool MyNeuron::isSameDouble(double d1, double d2)
     return d1 == d2;
 }
 
-void MyNeuron::calculateOutput(my_vector& x, my_vector& y, single_power& power, my_vector& bias, my_vector& o_sigmoid)
+void MyNeuron::calculateOutput(my_vector& x, my_vector& y, my_vector& batch_output, single_power& power, my_vector& bias, my_vector& o_sigmoid, bool shouldOrth)
 {
     // 确保权重矩阵的列数与输出向量的尺寸相匹配
     //for (int i = 0; i < power.size(); ++i) {
@@ -105,24 +107,36 @@ void MyNeuron::calculateOutput(my_vector& x, my_vector& y, single_power& power, 
 
     // 确保偏置向量的尺寸与输出向量的尺寸相匹配
     //assert(bias.size() == y.size());
+    //my_vector x = x0;
 
+    orth(x, x);
     // 计算输出向量的每个元素
-    for (int j = 0; j < y.size(); ++j) {
+    int y_size = y.size();
+    for (int j = 0; j < y_size; ++j) {
         y[j] = 0.0;
         for (int k = 0; k < x.size(); k++) {
             // 确保权重矩阵的行数与输入向量的尺寸相匹配
             //assert(k < power.size());
             // 确保当前的k行有一个对应的j列
             //assert(j < power[k].size());
-
             y[j] += x[k] * power[k][j];
         }
         //更新y
         y[j] = (y[j] + bias[j]);
-        // 应用激活函数
         o_sigmoid[j] = this->sigmoid(y[j]);
     }
-    orth(y);//正则化
+
+    //if(shouldOrth) 
+    //orth(y, y);
+    //return;
+    //for (int i = 0; i < y_size; ++i) {
+        //o_sigmoid[i] = this->sigmoid(y[i]);
+    //}
+
+    
+    
+
+    
     /*
     for (int j = 0; j < y.size(); ++j) {
         y[j] = 0.0;
@@ -187,18 +201,46 @@ void MyNeuron::backward(std::vector<my_vector>& data, my_vector& labels)
 
 }
 
-void MyNeuron::orth(my_vector& data)
+void MyNeuron::orth(my_vector & self_h, my_vector& batch_output)
 {
-    return;
-    int size = data.size();
-    double sum = 0.0;
-    for (auto d : data) {
-        sum += d*d;
+    
+    double mu = 0.0, delta_2 = 0.0;
+    int length = self_h.size();
+    for (size_t i = 0; i < length; i++)
+    {
+        //batch_output[i] = self_h[i];
+        mu += self_h[i];
     }
-    sum = sqrt(sum);
-    for (auto& d : data) {
-        d = d / sum;
+    
+    mu /= (double)length;
+    for (double& p : self_h) {
+        double val = p - mu;
+        delta_2 += val*val;
     }
+    delta_2 /= (double)length;
+    //printf("%f\n",delta_2);
+    static const double epsilon = 0.0001;
+    double fenmu = (delta_2 > epsilon) ? sqrt(delta_2) : epsilon;
+    //double fenmu = sqrt(delta_2);
+    if (0) {
+        for (size_t i = 0; i < length; ++i)
+        {
+            batch_output[i] = self_h[i];
+            //batch_output[i] = self_h[i];
+        }
+    }
+    else {
+        for (size_t i = 0; i < length; ++i)
+        {
+            batch_output[i] = (self_h[i] - mu) / fenmu;
+            self_h[i] = (self_h[i] - mu) / fenmu;
+            //batch_output[i] = self_h[i];
+        }
+    }
+
+    
+    //printf("%f\n", batch_output[0]);
+    
 }
 
 MyNeuron::MyNeuron() :MyNeuron(100, 0.01)
@@ -243,6 +285,10 @@ MyNeuron::MyNeuron(int epoches, double lr, int inputSize, int hiddenLayerSizes[]
     v.push_back({ {0.0} });
     //printf("start init!!\n");
     init(epoches, lr, v);
+}
+
+void MyNeuron::setLambda(double lambda) {
+    //this->lambda = lambda;
 }
 
 double MyNeuron::sigmoid(double x)
@@ -314,7 +360,7 @@ my_vector& MyNeuron::forward(my_vector& data) {
 
         // 检查权重矩阵的维度是否正确
         //if (h[i].size() != w[i].size()) {
-            //throw std::invalid_argument("Mismatch between layer output size and weight matrix size.");
+        //    throw std::invalid_argument("Mismatch between layer output size and weight matrix size.");
         //}
 
         // 检查权重矩阵的每个向量的尺寸是否与下一层的尺寸匹配
@@ -326,7 +372,7 @@ my_vector& MyNeuron::forward(my_vector& data) {
 
         // 计算下一层的输出
         //this->calculateOutput(h[i], h[i + 1], w[i], b[i + 1]);
-        this->calculateOutput(o[i], h[i + 1], w[i], b[i + 1], o[i + 1]);
+        this->calculateOutput(o[i], h[i + 1],batch_o[i+1], w[i], b[i + 1], o[i + 1], i+1<i_max);
         //printf("new h will be:\n");
         //for (int ti = 0; ti < h[i+1].size(); ++ti) {
 
@@ -473,7 +519,7 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
         // 每个epoch后输出损失
         //continue;
         if (epoch % LR_VOKE) continue;
-        printf("train-printloss\n");
+        //printf("train-printloss\n");
         double loss = 0;
         for (int dataIndex = 0; dataIndex < data.size(); ++dataIndex) {
             my_vector& output = forward(data[dataIndex]);
@@ -485,6 +531,7 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
         }
         loss /= data.size();
         std::cout << "Epoch " << epoch << ", Loss: " << loss << std::endl;
+        /*
         for (int i = 0; i < w.size(); ++i) {
             for (int j = 0; j < w[i].size(); ++j) {
                 printf("w%d%d:\t", i, j);
@@ -494,7 +541,7 @@ void MyNeuron::train(std::vector<my_vector>& data, my_vector& label) {
                 printf("\nb: %f\n", b[i][j]);
             }
             printf("\n");
-        }
+        }*/
 
     }
 

@@ -11,26 +11,41 @@ class ReLuMLP:public MyNeuron {
 
 
     double sigmoid(double x) override {
-        return x > 0.0 ? x : 0.0;
+        //return x > 0.0 ? x : 0.0;
+        return x > 0.0 ? x : 0.01 * x;
     }
 
     double d_sigmoid(double x) override {
-        return x > 0.0 ? 1.0 : 0.0;
+        //return x > 0.0 ? 1.0 : 0.0;
+        return x > 0.0 ? 1.0 : 0.01;
     }
 public:
     ReLuMLP(int ep, double lr, int is, std::vector<int>& layers) :MyNeuron(ep, lr, is, layers) {}
 };
 
 
-class OrthReLuMLP :public ReLuMLP{
-    void orth(std::vector<double>& data) override {
-
+class OrthMLP :public MyNeuron{
+    void orth23(my_vector& h, my_vector& h_batch) {
+        return;
+        int size = h.size();
+        for (size_t i = 0; i < size; i++)
+        {
+            h_batch[i] = h[i];
+        }
+        //MyNeuron::orth(h, h_batch);
     }
+public:
+    OrthMLP(int ep, double lr, int is, std::vector<int>& layers) :MyNeuron(ep, lr, is, layers) {}
 };
 
 bool judgeOther(double x, double y) {
     //区域：x和y处在x^2+y^2<0.25 or (x-1)^2+(y-1)^2<0.25的区域内
     return (x * x + y * y < 0.25) || (x - 1) * (x - 1)+(y-1)*(y-1) < 0.25;
+}
+
+void resolveParams(double& d) {
+    if (d > 0.0) return;
+    d = 0.0;
 }
 
 int main() {
@@ -59,7 +74,7 @@ int main() {
     }
 
     //写入数据到本地
-    saveDataToFile(trainData, trainLabel, "data.txt");
+    //saveDataToFile(trainData, trainLabel, "data.txt");
 
     std::vector<my_vector> testData(500);
     my_vector testLabel(500);
@@ -86,17 +101,19 @@ int main() {
     //neuron.train(trainData, trainLabel);
     //mpl.train(trainData, trainLabel);
 
-    std::vector<int> layers = { 3,5,11,2,4};
-    MyNeuron sigmoidNeuron(4000, 0.03, 2, layers);
-    ReLuMLP reLuNeuron(4000, 0.03, 2, layers);
+    std::vector<int> layers = { 3,5,4,6,7,8,9};
+    //std::vector<int> layers = { 3,5,4 };
+    OrthMLP sigmoidNeuron(20000, 0.0016, 2, layers);
+    sigmoidNeuron.setLambda(0.5);
+    ReLuMLP reLuNeuron(8000, 0.0005, 2, layers);
     printf("some test data compare\n");
     sigmoidNeuron.setLR_VOKE(1000);
-    reLuNeuron.setLR_VOKE(1000);
+    reLuNeuron.setLR_VOKE(400);
 
     //读取data
-    loadDataFromFile(trainData, trainLabel, "data.txt");
+    //loadDataFromFile(trainData, trainLabel, "data.txt");
+    //reLuNeuron.train(trainData, trainLabel);
     sigmoidNeuron.train(trainData, trainLabel);
-    reLuNeuron.train(trainData, trainLabel);
     /*
     for (int i = 0; i < 5; ++i)
     {
@@ -108,10 +125,55 @@ int main() {
 
     //int corSum = 0;
     int sigmoidSum = 0, reLuSum = 0;
+
+
+    double sigmoid_recall = 0.0, sigmoid_precision = 0.0, sigmoidF1 = 0.0,
+        relu_recall = 0.0, relu_precision = 0.0, reluF1 = 0.0;
+
+    double sigmoid_f1 = 0.0, relu_f1 = 0.0;
+
+    int sigmoidTP = 0.0, sigmoidFN = 0.0, sigmoidFP = 0.0, sigmoidTN = 0.0,
+        reluTP = 0.0, reluFN = 0.0, reluFP = 0.0, reluTN = 0.0;
+
     for (int i = 0; i < 500; ++i) {
         //my_vector& out = neuron.predict(testData[i]);
-        if (sigmoidNeuron.predict(testData[i], 0.5) == testLabel[i]) sigmoidSum += 1;
-        if (reLuNeuron.predict(testData[i], 0.5) == testLabel[i]) reLuSum += 1;
+        double sigmoid_pred = sigmoidNeuron.predict(testData[i], 0.5),
+            relu_pred = reLuNeuron.predict(testData[i], 0.5);
+
+        if (testLabel[i] > 0.5) {
+            if (sigmoid_pred > 0.5) {
+                sigmoidTP+=1;
+            }
+            else {
+                sigmoidFN+=1;
+            }
+            if (relu_pred > 0.5) {
+                reluTP+=1;
+            }
+            else {
+                reluFN+=1;
+            }
+        }
+        else {
+            if (sigmoid_pred > 0.5) {
+                sigmoidFP+=1;
+            }
+            else {
+                //sigmoidSum += 1;
+                sigmoidTN += 1;
+            }
+            if (relu_pred > 0.5) {
+                reluFP+=1;
+            }
+            else {
+                //reLuSum += 1;
+                reluTN += 1;
+            }
+        }
+
+        
+        //if (sigmoid_pred == testLabel[i]) sigmoidSum += 1;
+        //if (relu_pred == testLabel[i]) reLuSum += 1;
         //if (out[0] == testLabel[i]) corSum += 1;
         //if (mpl.predict(testData[i], 0.5) == testLabel[i]) corSum += 1;
     }
@@ -121,7 +183,41 @@ int main() {
     printf("\n%f\n", outputs[0]);
     */
     //printf("\ncorrect rate is：%.1f\n", (double)corSum / 5.0);
-    printf("\ncorrect rate of sigmoid is:%.1f\n", (double)sigmoidSum / 5.0);
+    sigmoidSum = sigmoidTP+sigmoidTN;
+    reLuSum =reluTP+reluTN;
+    sigmoid_recall = double(sigmoidTP) / double(sigmoidTP + sigmoidFN);
+    sigmoid_precision = double(sigmoidTP) / double(sigmoidTP + sigmoidFP);
+    resolveParams(sigmoid_recall);
+    resolveParams(sigmoid_precision);
+    sigmoidF1 = (2.0 * sigmoid_precision * sigmoid_recall) / (sigmoid_precision + sigmoid_recall);
+    resolveParams(sigmoidF1);
+    relu_recall = double(reluTP) / double(reluTP + reluFN);
+    relu_precision = double(reluTP) / double(reluTP + reluFP);
+
+    resolveParams(relu_recall);
+    resolveParams(relu_precision);
+    reluF1 = (2.0 * relu_precision * relu_recall) / (relu_precision + relu_recall);
+    resolveParams(reluF1);
+
+    
+
+    printf("sigmoidTP:%d\n", sigmoidTP);
+    printf("sigmoidFN:%d\n", sigmoidFN);
+    printf("sigmoidFP:%d\n", sigmoidFP);
+    printf("sigmoidTN:%d\n", sigmoidTN);
+    printf("sigmoid SUM:%d\n", sigmoidSum);
+
+
+    printf("sigmoid;\n");
+    printf("recall: %f\n", sigmoid_recall);
+    printf("precision: %f\n", sigmoid_precision);
+    printf("f1 score: %f\n", sigmoidF1);
+    printf("correct rate of sigmoid is:%.1f\n", (double)sigmoidSum / 5.0);
+    printf("\n");
+    printf("relu;\n");
+    printf("recall: %f\n", relu_recall);
+    printf("precision: %f\n", relu_precision);
+    printf("f1 score: %f\n", reluF1);
     printf("\ncorrect rate of ReLu is:%.1f\n", (double)reLuSum / 5.0);
     // 测试网络
     // ... 这里可以添加一些测试代码来验证网络的表现
