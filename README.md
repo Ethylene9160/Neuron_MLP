@@ -214,6 +214,7 @@ $$
 \frac{\part E}{\part o_k}
 \frac{\part o_k}{\part z_k}
 \frac{\part z_k}{\part w_{ki}}
+=\frac{\partial E}{\partial z_k}\frac{\partial z_k}{\partial \omega_{ki}}
 $$
 <p align='center'><font size=3>式3-2</font></p>
 
@@ -383,6 +384,91 @@ $$
 * 隐藏层和输入层
 
   在输出层表明了label之后，我们可以根据后面的数据，逐层往前传递。隐藏层的推导和输出层的推导方法基本一致。只是需要注意error的计算。==todo==
+
+  隐藏层中，考虑更深层次的神经网络：
+
+  ![image-20231128152247181](README.assets/image-20231128152247181.png)
+  $$
+  \pmb {h_{1}}=\pmb{\omega_0\cdot o_0}\\
+  \pmb{o_1}=g(\pmb{h_1})\\
+  \pmb{h_2}=\pmb{\omega_1\cdot o_1}\\
+  \frac{
+  	\partial E
+  }{
+  	\partial \pmb{h_1}
+  }=
+  \frac{\partial E}{\partial \pmb {h_2}}
+  \frac{\partial \pmb {h_2}}{\partial \pmb{o_1}}
+  \frac{\partial \pmb{o_1}}{\partial \pmb{h_1}}
+  $$
+  在这里，我们推断出了很重要的一个公式，反向计算中，损失函数对前一层输出的导数，其对后一层的导数有关，最终这个关系式子将被推断到与输出层的损失有关（例如式子todo。）。因而，将上一步过程中损失函数对输出层的偏导数保存下来，就能实现逐层的传递。
+
+  伪代码：
+
+  ```pseudocode
+  function backward(data, y_label):
+      output_o = forward(data)
+      output_h = h[h.size() - 1]
+      y_pred = output_o[0]
+      
+      error = y_pred - y_label
+      
+      outputLayerGradient = create_vector(1, error * d_sigmoid(output_h[0]))
+      
+      layerGradients = create_vector_of_vectors()
+      push_back(layerGradients, outputLayerGradient)
+      
+      // Inverse promoting
+      for layerIndex from h.size() - 2 to 0 step -1:
+          layerGradient = create_vector()
+          
+          // Calculate the power of current neuron
+          for neuronIndex from 0 to h[layerIndex].size:
+              gradientSum = 0.0
+              
+              for nextNeuronIndex from 0 to h[layerIndex + 1].size:
+                  gradientSum += w[layerIndex][neuronIndex][nextNeuronIndex] * layerGradients[0][nextNeuronIndex]
+                  
+              layerGradient.push_back(gradientSum * d_sigmoid(h[layerIndex][neuronIndex]))
+          
+          insert_at_position(layerGradients, 0, layerGradient)  // Insert to the first position
+      
+      // Update weights and biases
+      for layerIndex from 0 to w.size():
+          for neuronIndex from 0 to w[layerIndex].size():
+              for nextNeuronIndex from 0 to w[layerIndex][neuronIndex].size():
+                  w[layerIndex][neuronIndex][nextNeuronIndex] -= learning * o[layerIndex][neuronIndex] * layerGradients[layerIndex][nextNeuronIndex]
+      
+          for biasIndex from 0 to b[layerIndex].size():
+              b[layerIndex][biasIndex] -= learning * layerGradients[layerIndex][biasIndex]
+  
+  ```
+
+  矩阵形式的伪代码：
+
+  ```pseudocode
+  Algorithm: Backward
+  Input: An array data, a double ylabel
+  Output: No output
+  
+      output_o = Forward(data)
+      error = output_o[0] - y_label
+      
+      outputLayerGradient = CreateVector(1, error * DSigmoid(h[-1][0]))
+      layerGradients = [outputLayerGradient]
+  
+      for layerIndex from h.size() - 2 to 0 step -1:
+          layerGradient = Transpose(w[layerIndex]) * layerGradients[0] .* DSigmoid(h[layerIndex])
+          InsertAtPosition(layerGradients, 0, layerGradient)
+  
+      for layerIndex from 0 to w.size():
+          w[layerIndex] -= learning * o[layerIndex] * layerGradients[layerIndex]
+          b[layerIndex] -= learning * layerGradients[layerIndex]
+  ```
+
+  
+
+  
 
   
 

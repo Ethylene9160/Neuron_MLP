@@ -25,14 +25,41 @@ public:
 
 
 class OrthMLP :public MyNeuron{
-    void orth23(my_vector& h, my_vector& h_batch) {
-        return;
-        int size = h.size();
-        for (size_t i = 0; i < size; i++)
+
+    void orth(my_vector& self_h, my_vector& no_use_array) override {
+        double mu = 0.0, delta_2 = 0.0;
+        int length = self_h.size();
+        for (size_t i = 0; i < length; i++)
         {
-            h_batch[i] = h[i];
+            //batch_output[i] = self_h[i];
+            mu += self_h[i];
         }
-        //MyNeuron::orth(h, h_batch);
+
+        mu /= (double)length;
+        for (double& p : self_h) {
+            double val = p - mu;
+            delta_2 += val * val;
+        }
+        delta_2 /= (double)length;
+        //printf("%f\n",delta_2);
+        static const double epsilon = 0.0001;
+        double fenmu = (delta_2 > epsilon) ? sqrt(delta_2) : epsilon;
+        //double fenmu = sqrt(delta_2);
+        if (0) {
+            for (size_t i = 0; i < length; ++i)
+            {
+                //batch_output[i] = self_h[i];
+                //batch_output[i] = self_h[i];
+            }
+        }
+        else {
+            for (size_t i = 0; i < length; ++i)
+            {
+                //batch_output[i] = (self_h[i] - mu) / fenmu;
+                self_h[i] = (self_h[i] - mu) / fenmu;
+                //batch_output[i] = self_h[i];
+            }
+        }
     }
 public:
     OrthMLP(int ep, double lr, int is, std::vector<int>& layers) :MyNeuron(ep, lr, is, layers) {}
@@ -101,9 +128,9 @@ int main() {
     //neuron.train(trainData, trainLabel);
     //mpl.train(trainData, trainLabel);
 
-    std::vector<int> layers = { 3,5,4,6,7,8,9};
-    //std::vector<int> layers = { 3,5,4 };
-    OrthMLP sigmoidNeuron(20000, 0.0016, 2, layers);
+    //std::vector<int> layers = { 3,5,4,6,7,8,9};
+    std::vector<int> layers = { 3,4 };
+    OrthMLP sigmoidNeuron(2000, 0.025, 2, layers);
     sigmoidNeuron.setLambda(0.5);
     ReLuMLP reLuNeuron(8000, 0.0005, 2, layers);
     printf("some test data compare\n");
