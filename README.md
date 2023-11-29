@@ -1,10 +1,11 @@
-# Neuron_MLP
+# Neuron_MLP（已烂尾）
 
 ![Static Badge](https://img.shields.io/badge/C%2B%2B-11-blue)
-
 ![Static Badge2](https://img.shields.io/badge/python-3.9-yellow)
 
 无法正常查看数学公式？点击[这里](null.html)（还没转html（））
+
+**鸽了鸽了 没有html**
 
 笨人无才，仓库名字打错了w。
 
@@ -99,7 +100,7 @@ typedef std::vector<single_power> my_power;
 
 返回：
 
-* 目前输出层默认（也只能emmm，笨人无才，不会多层）为1*1的一维矩阵。如图2-1，则这个函数的输出结果是output layer。详情查看：==todo==
+* 目前输出层默认（也只能emmm，笨人无才，不会多层）为1*1的一维矩阵。如图2-1，则这个函数的输出结果是output layer。详情查看：==todo==**鸽了鸽了**
 
 <font size=4>`void train(std::vector<my_vector>& data, my_vector& label);`</font> 训练神经网络。
 
@@ -119,7 +120,7 @@ typedef std::vector<single_power> my_power;
 
 * *threshold*：阈值。超过这个阈值，predict值将会返回1.0，否则返回0.0。
 
-  参见==todo==。
+  参见==todo==。**鸽了鸽了**
 
 返回：
 
@@ -157,7 +158,7 @@ std::vector<my_vector> b;	//bias, dimension is 2 to fix each layer h.
 my_power w;					//power, dimension is three
 ```
 
-这几个变量将具有如下几个关系：==todo 插入描述图==
+这几个变量将具有如下几个关系：==todo 插入描述图==鸽了鸽了
 
 其中，h和o包括了input和output的layer。
 
@@ -357,7 +358,7 @@ $$
   > $$
   > 因此，参照式3-4可知，对于图3-1示输出层（不考虑偏置）：
   > $$
-  > J(E)=\begin{bmatrix}
+  > J(E, \pmb{\omega})=\begin{bmatrix}
   > \frac{\part E}{\part \omega_{0}},~\frac{\part E}{\part \omega_{1}}
   > \end{bmatrix}
   > $$
@@ -383,7 +384,7 @@ $$
   
 * 隐藏层和输入层
 
-  在输出层表明了label之后，我们可以根据后面的数据，逐层往前传递。隐藏层的推导和输出层的推导方法基本一致。只是需要注意error的计算。==todo==
+  在输出层表明了label之后，我们可以根据后面的数据，逐层往前传递。隐藏层的推导和输出层的推导方法基本一致。只是需要注意error的计算。==todo==**鸽了鸽了**
 
   隐藏层中，考虑更深层次的神经网络：
 
@@ -502,7 +503,7 @@ $$
 
 * 更新权重与偏置：乘以学习率和上一层的输出。
 
-  预留
+  预留**鸽了**
 
   ```c++
   void backward(my_vector&data, double y_label){
@@ -608,11 +609,15 @@ cmake --build . --config Release
 
 在同目录的Release文件夹下的build目录内，找到bin或者lib目录（或者其他），在其中可以找到对应的`.dll`动态链接库
 
+**鸽了鸽了**
+
 # Problems to be solven
 
 ## Disappearance and Dxplosion in Gradient Calculating
 
 解决梯度消失：<!-->todo: 叙述梯度消失与爆炸的解决方案<-->
+
+**鸽了鸽了**
 
 根据梯度更新公式（式3-5）：
 $$
